@@ -1,5 +1,6 @@
 import re
 import os
+import math
 
 dic = {}  #dictionary of all words
 ham = 0  #total words in ham
@@ -13,6 +14,7 @@ for i in os.listdir('train'):
      cont = list(filter(None, cont))
 
      for item in cont:
+        item = item.lower()
         if (item in dic):
             if(re.search(re.compile("ham"), i)):
                 dic[item][0] += 1
@@ -23,10 +25,10 @@ for i in os.listdir('train'):
         else:
             if(re.search(re.compile("ham"), i)):
                 dic[item] = [1, 0, 0, 0]
-                ham =+ 1
+                ham += 1
             elif(re.search(re.compile("spam"), i)):
                 dic[item] = [0, 0, 1, 0]
-                spam =+ 1
+                spam += 1
 
 #i[0] freq of ham word
 #i[1] conditional probability of ham word
@@ -34,10 +36,12 @@ for i in os.listdir('train'):
 #i[3] conditional probability of spam word
 
 for i in dic.values():
-    i[1] = ( i[0] + 0.5 ) / ( ham*1.5 )
-    i[3] = ( i[2] + 0.5 ) / ( spam*1.5 )
+    i[1] = math.log10( ( i[0] + 0.5 ) / ( ham*1.5 ) )
+    i[3] = math.log10( ( i[2] + 0.5 ) / ( spam*1.5 ) )
 
-f = open("model.txt", "a")
+#conditional prob in log10 space
+
+f = open("model.txt", "w")
 
 k = 0
 for i in sorted(dic.keys()):
