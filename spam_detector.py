@@ -1,7 +1,6 @@
 import numpy
 import re
 import math
-#import glob
 import os
 #from nb_model import NB_model 
 
@@ -14,7 +13,6 @@ class NB_model:
         self.prob_ham = 0
         self.tot_ham_words = 0
         self.tot_spam_words = 0
-        #print(msg)
 
     def getData(self):
         vocab = []
@@ -62,15 +60,12 @@ class NB_model:
             vocab_set.append(key)
         vocab_set = set(vocab_set)
 
-        print(len(vocab_set))
         for key,value in spamwords.items():
             self.tot_spam_words += value
             vocab_set.add(key)
-        print(len(vocab_set))
-        self.vocab = list(vocab_set)
-        print(len(self.vocab))
-        file = open("./model.txt", 'w+')
 
+        self.vocab = list(vocab_set)
+        file = open("./model.txt", 'w+')
         index = 1
         for word in sorted(self.vocab):
             try:
@@ -87,10 +82,8 @@ class NB_model:
             self.ham_prob_dict[word] = prob_word_ham
             prob_word_spam = (sp_dict[word]+0.5)/(self.tot_spam_words+len(self.vocab))
             self.spam_prob_dict[word] = prob_word_spam
-           # print("%d  %s  %d  %f  %d  %f"%(index, word, hm_dict[word], prob_word_ham, sp_dict[word], prob_word_spam))
             file.write("%d  %s  %d  %f  %d  %f\n"%(index, word, hm_dict[word], prob_word_ham, sp_dict[word], prob_word_spam))
-            index +=1
-
+            index += 1
         file.close()
 
     def test(self, words):
@@ -112,11 +105,14 @@ class NB_model:
         else:
             return("spam",score_ham,score_spam)
 
+
+print("Training the Model")
 model = NB_model("creating object")
 hamwords, spamwords, hamdoc_count, spamdoc_count = model.getData()
 prob_ham = (hamdoc_count/(hamdoc_count+spamdoc_count))
 prob_spam = (spamdoc_count/(hamdoc_count+spamdoc_count))
 model.train(hamwords,spamwords,prob_ham,prob_spam)
+print("Testing the Model")
 
 index = 1
 y_act = []
@@ -136,7 +132,6 @@ for file in os.listdir('./test/'):
         else:
             output = 'wrong'
             y_pred.append(1)
-    #print("%d  %s  %s  %f  %f  %s  %s"%(index, file, result, h_score, s_score, "ham", output))
         res_file.write("%d  %s  %s  %f  %f  %s  %s \n"%(index, file, result, h_score, s_score, "ham", output))
         index += 1
 
@@ -153,15 +148,14 @@ for file in os.listdir('./test/'):
         else:
             output = 'right'
             y_pred.append(1)
-    #print("%d  %s  %s  %f  %f  %s  %s"%(index, file, result, h_score, s_score, "spam", output))
         res_file.write("%d  %s  %s  %f  %f  %s  %s \n"%(index, file, result, h_score, s_score, "spam", output))
         index += 1
 
 res_file.close()
 
 
-def resultFn(true_pos, true_neg, false_pos, false_neg):
-    print("-------------------------------------------Evaluation--------------------------------------------")
+def resultfn(true_pos, true_neg, false_pos, false_neg, model_name):
+    print("-------------------------------------------Evaluation "+model_name+"--------------------------------------------")
     print("------------------------------------------")
     print(" | "+"true_pos : "+ str(true_pos)+" | "+"false_pos : "+ str(false_pos)+" | " +"\n | false_neg : "+ str(false_neg) +" | "+"true_neg : "+str(true_neg)+" | ")
     print("------------------------------------------")
@@ -170,6 +164,7 @@ def resultFn(true_pos, true_neg, false_pos, false_neg):
     f1 = 2 * ((precision * recall)/(precision + recall))
     accuracy = (true_pos)/(true_pos + false_neg)
     print("Precision : "+str(precision*100) + "\nRecall : "+str(recall*100)+"\nF1-score : "+str(f1*100)+"\nAccuracy : "+str(accuracy*100))
+
 
 # positive = ham and negative = spam
 tp = 0
@@ -185,8 +180,8 @@ for i in range(len(y_act)):
         fp += 1
     else:
         tn += 1
-print("HAM Results")
-resultFn(tp, tn, fp, fn)
+
+resultfn(tp, tn, fp, fn, "HAM Results")
 
 # positive = spam and negative = ham
 tp = 0
@@ -202,7 +197,6 @@ for i in range(len(y_act)):
         fp += 1
     else:
         tn += 1
-print("SPAM Results")
-resultFn(tp, tn, fp, fn)
-
-print("Total Accuracy : %f"%(100*(tp+tn)/(tp+tn+fp+fn)))
+resultfn(tp, tn, fp, fn, "SPAM Results")
+print()
+print("Overall Accuracy of the model : %f"%(100*(tp+tn)/(tp+tn+fp+fn)))
